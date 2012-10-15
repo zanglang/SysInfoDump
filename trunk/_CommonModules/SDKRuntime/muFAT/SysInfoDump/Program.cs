@@ -7,6 +7,7 @@
 
 namespace SysInfoDump
 {
+    using System;
     using System.Diagnostics;
     using System.IO;
     using SysInfoSharp;
@@ -20,13 +21,23 @@ namespace SysInfoDump
         /// Program entry function
         /// </summary>
         /// <param name="args">Command line arguments</param>
+        [STAThread]
         public static void Main(string[] args)
         {
             // specify writing destination
             string outputFile = Path.Combine(@"C:\muveeDebug", "sysinfoout.txt");
+            string filter = string.Empty;
+
+            // allow specifying an output file
             if (args.Length > 0)
             {
                 outputFile = args[0];
+            }
+
+            // allow specifying a category to print
+            if (args.Length > 1)
+            {
+                filter = args[1];
             }
 
             using (var strm = File.Open(outputFile, FileMode.Create))
@@ -42,6 +53,11 @@ namespace SysInfoDump
                 sysInfo.Init();
                 foreach (var category in sysInfo.GetCategories())
                 {
+                    if (!string.IsNullOrEmpty(filter) && !string.Equals(filter, category, StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
                     Trace.WriteLine("--------------------------------------------");
                     Trace.WriteLine("Category: " + category);
                     Trace.WriteLine("--------------------------------------------");
