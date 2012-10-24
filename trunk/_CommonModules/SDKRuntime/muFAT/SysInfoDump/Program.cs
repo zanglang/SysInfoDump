@@ -10,6 +10,7 @@ namespace SysInfoDump
     using System;
     using System.Diagnostics;
     using System.IO;
+    using System.Linq;
     using SysInfoSharp;
 
     /// <summary>
@@ -25,20 +26,10 @@ namespace SysInfoDump
         public static void Main(string[] args)
         {
             // specify writing destination
-            string outputFile = Path.Combine(@"C:\muveeDebug", "sysinfoout.txt");
-            string filter = string.Empty;
-
-            // allow specifying an output file
-            if (args.Length > 0)
-            {
-                outputFile = args[0];
-            }
-
+            var outputFile = args.Length > 0 ? args[0] : Path.Combine(@"C:\muveeDebug", "sysinfoout.txt");
+            
             // allow specifying a category to print
-            if (args.Length > 1)
-            {
-                filter = args[1];
-            }
+            var filter = args.Length > 1 ? args[1] : string.Empty;
 
             using (var strm = File.Open(outputFile, FileMode.Create))
             {
@@ -51,16 +42,15 @@ namespace SysInfoDump
                 // dumping system info
                 var sysInfo = new SysInfoLib();
                 sysInfo.Init();
-                foreach (var category in sysInfo.GetCategories())
+                foreach (var category in sysInfo.GetCategories().Where(
+                    category =>
+                        string.IsNullOrEmpty(filter) ||
+                        string.Equals(filter, category, StringComparison.OrdinalIgnoreCase)))
                 {
-                    if (!string.IsNullOrEmpty(filter) && !string.Equals(filter, category, StringComparison.OrdinalIgnoreCase))
-                    {
-                        continue;
-                    }
-
-                    Trace.WriteLine("--------------------------------------------");
-                    Trace.WriteLine("Category: " + category);
-                    Trace.WriteLine("--------------------------------------------");
+                    Trace.WriteLine(@"
+--------------------------------------------
+Category: " + category + @"
+--------------------------------------------");
 
                     foreach (var pair in sysInfo[category])
                     {
